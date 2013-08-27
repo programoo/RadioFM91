@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -34,6 +35,7 @@ public class RequestTask extends AsyncTask<String, String, String> {
 	public static String AppID = "abcb6710";
 	public static String hiddenkey = "TxLYP6j1Ee";
 	public static String randomStr = "undefined";
+	public static HashMap<String,News> newsMap = new HashMap<String,News>();
 
 	static ArrayList<String> newsFeed = new ArrayList<String>();
 
@@ -108,6 +110,10 @@ public class RequestTask extends AsyncTask<String, String, String> {
 	}
 
 	public void traffyNewsXmlParser(String xmlString) {
+		if (xmlString == null) {
+			Log.e(tag, "traffyNewsXmlParser: nullString");
+			return;
+		}
 
 		Document doc = null;
 		try {
@@ -128,7 +134,7 @@ public class RequestTask extends AsyncTask<String, String, String> {
 		// optional, but recommended
 		// read this -
 		// http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
-		//doc.getDocumentElement().normalize();
+		// doc.getDocumentElement().normalize();
 
 		System.out.println("Root element :"
 				+ doc.getDocumentElement().getNodeName());
@@ -141,7 +147,7 @@ public class RequestTask extends AsyncTask<String, String, String> {
 
 			Node nNode = nList.item(temp);
 
-			System.out.println("\nCurrent Element :" + nNode.getNodeName());
+			// System.out.println("\nCurrent Element :" + nNode.getNodeName());
 
 			if (nNode.getNodeType() == Node.ELEMENT_NODE) {
 
@@ -186,10 +192,14 @@ public class RequestTask extends AsyncTask<String, String, String> {
 						"endpoint", "latitude");
 				String endPointLong = getStringValueFromExistElement(eElement,
 						"endpoint", "longitude");
-				News n =new News(id, type, primarySource, secondarySource, startTime,
-						endTime, mediaType, mediaPath, title, description,
-						locationType,roadName,startPointName,startPointLat,startPointLong,endPointName,endPointLat,endPointLong);
-				System.out.println(n.toString());
+				News n = new News(id, type, primarySource, secondarySource,
+						startTime, endTime, mediaType, mediaPath, title,
+						description, locationType, roadName, startPointName,
+						startPointLat, startPointLong, endPointName,
+						endPointLat, endPointLong);
+				
+				newsMap.put(id, n);
+				//Log.i(tag, n.toString());
 			}
 		}
 

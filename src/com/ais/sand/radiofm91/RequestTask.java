@@ -19,7 +19,6 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.w3c.dom.CharacterData;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -87,7 +86,7 @@ public class RequestTask extends AsyncTask<String, String, String> {
 			new RequestTask().execute(traffy_request_url);
 		} else {
 			// this mean we get real data from traffy already
-			this.xmlParser(result);
+			this.traffyNewsXmlParser(result);
 		}
 
 	}
@@ -108,48 +107,107 @@ public class RequestTask extends AsyncTask<String, String, String> {
 		return hashtext;
 	}
 
-	public void xmlParser(String result) {
-		String xmlRecords = "<data><employee><name>A</name>"
-				+ "<title>Manager</title></employee></data>";
+	public void traffyNewsXmlParser(String xmlString) {
 
-		DocumentBuilder db;
-		NodeList nodes = null;
+		Document doc = null;
 		try {
-			db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-			InputSource is = new InputSource();
-			is.setCharacterStream(new StringReader(xmlRecords));
-
-			Document doc = db.parse(is);
-			nodes = doc.getElementsByTagName("employee");
+			DocumentBuilderFactory factory = DocumentBuilderFactory
+					.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			InputSource is = new InputSource(new StringReader(xmlString));
+			doc = builder.parse(is);
 
 		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (SAXException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		for (int i = 0; i < nodes.getLength(); i++) {
-			Element element = (Element) nodes.item(i);
+		// optional, but recommended
+		// read this -
+		// http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
+		//doc.getDocumentElement().normalize();
 
-			NodeList name = element.getElementsByTagName("news");
-			Element line = (Element) name.item(0);
-			System.out.println("news: " + getCharacterDataFromElement(line));
+		System.out.println("Root element :"
+				+ doc.getDocumentElement().getNodeName());
 
+		NodeList nList = doc.getElementsByTagName("news");
+
+		System.out.println("----------------------------" + nList.getLength());
+
+		for (int temp = 0; temp < nList.getLength(); temp++) {
+
+			Node nNode = nList.item(temp);
+
+			System.out.println("\nCurrent Element :" + nNode.getNodeName());
+
+			if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+
+				Element eElement = (Element) nNode;
+				String id = eElement.getAttribute("id");
+				String type = eElement.getAttribute("type");
+				String primarySource = eElement.getAttribute("primarysource");
+				String secondarySource = eElement
+						.getAttribute("secondarysource");
+				String startTime = eElement.getAttribute("starttime");
+				String endTime = eElement.getAttribute("endtime");
+
+				String mediaType = eElement.getElementsByTagName("media")
+						.item(0).getAttributes().getNamedItem("type")
+						.getNodeValue();
+				String mediaPath = eElement.getElementsByTagName("media")
+						.item(0).getAttributes().getNamedItem("path")
+						.getNodeValue();
+
+				String title = eElement.getElementsByTagName("title").item(0)
+						.getTextContent();
+				String description = eElement
+						.getElementsByTagName("description").item(0)
+						.getTextContent();
+
+				String locationType = eElement.getElementsByTagName("location")
+						.item(0).getAttributes().getNamedItem("type")
+						.getNodeValue();
+
+				String roadName = getStringValueFromExistElement(eElement,
+						"road", "name");
+				String startPointName = getStringValueFromExistElement(
+						eElement, "startpoint", "name");
+				String startPointLat = getStringValueFromExistElement(eElement,
+						"startpoint", "latitude");
+				String startPointLong = getStringValueFromExistElement(
+						eElement, "startpoint", "longitude");
+
+				String endPointName = getStringValueFromExistElement(eElement,
+						"endpoint", "name");
+				String endPointLat = getStringValueFromExistElement(eElement,
+						"endpoint", "latitude");
+				String endPointLong = getStringValueFromExistElement(eElement,
+						"endpoint", "longitude");
+				News n =new News(id, type, primarySource, secondarySource, startTime,
+						endTime, mediaType, mediaPath, title, description,
+						locationType,roadName,startPointName,startPointLat,startPointLong,endPointName,endPointLat,endPointLong);
+				System.out.println(n.toString());
+			}
 		}
+
+	}// end xml parser
+
+	public String getStringValueFromExistElement(Element eElement,
+			String elementName, String attributeName) {
+		try {
+			String valueString = eElement.getElementsByTagName(elementName)
+					.item(0).getAttributes().getNamedItem(attributeName)
+					.getNodeValue();
+			return valueString;
+		} catch (NullPointerException e) {
+			Log.d(tag, "element not found: " + elementName + ","
+					+ attributeName);
+			return "undefined";
+		}
+
 	}
 
-	public static String getCharacterDataFromElement(Element e) {
-		if(e == null )return "";
-		Node child = e.getFirstChild();
-		if (child instanceof CharacterData) {
-			CharacterData cd = (CharacterData) child;
-			return cd.getData();
-		}
-		return "";
-	}
 }

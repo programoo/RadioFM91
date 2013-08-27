@@ -2,7 +2,7 @@ package com.ais.sand.radiofm91;
 
 public class News {
 	private String tag = getClass().getSimpleName();
-	int id;
+	String id;
 	String type;
 	String primarySource;
 	String secondarySource;
@@ -19,7 +19,7 @@ public class News {
 	String endPoint;
 	String endPointLat, endPointLong;
 
-	public News(int id, String type, String primarySource,
+	public News(String id, String type, String primarySource,
 			String secondarySource, String startTime, String endTime,
 			String mediaType, String path, String title, String description,
 			String locationType, String roadName, String startPoint,
